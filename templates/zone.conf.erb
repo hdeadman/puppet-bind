@@ -68,10 +68,10 @@ zone "<%= @_domain %>" {
 	forwarders {
 <%-   Array(@forwarders).each do |forwarder| -%>
 		<%= forwarder %><%-if @forwarders_port != 53 -%> port <%= @forwarders_port %><%- end -%>;
-<%-   else -%>
-    // do normal iterative resolution (do not forward)
-    forwarders { };
 <%-   end -%>
 	};
+<%- else -%>
+    // do normal iterative resolution (do not forward)
+    forwarders { };	
 <%- end -%>
 };

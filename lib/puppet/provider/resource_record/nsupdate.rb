@@ -6,22 +6,22 @@ Puppet::Type.type(:resource_record).provide(:nsupdate) do
   end
 
   def create
-    update do |file|
-      accio(file)
+    update do |contents|
+      accio(contents)
     end
   end
 
   def destroy
-    update do |file|
-      destructo(file)
+    update do |contents|
+      destructo(contents)
     end
   end
 
   def flush
     return if @properties.empty?
-    update do |file|
-      accio(file)
-      destructo(file)
+    update do |contents|
+      accio(contents)
+      destructo(contents)
     end
   end
 
@@ -36,31 +36,44 @@ Puppet::Type.type(:resource_record).provide(:nsupdate) do
 private
 
   def update(&block)
-    file = Tempfile.new('dns_rr-nsupdate-')
-    file.write "server #{server}\n"
-    file.write "zone #{zone}\n" unless zone.nil?
-    yield file
-    file.write "send\n"
+    contents = ""
+    contents << "server #{server}\n"
+    unless zone.nil?
+      contents << "zone #{zone}\n"
+    end
+    yield contents
+    contents << "send\n"
+    
+    file = Tempfile.new("dns_rr-nsupdate-#{server}-")
+    file.write "#{contents}"
     file.close
-    if keyed?
-      nsupdate('-y', tsig_param, file.path)
-    elsif keyfile?
-      nsupdate('-k', kfile, file.path)
-    else
-      nsupdate(file.path)
-    end
+    debug("Wrote the following to " + file.path + "\n" + contents)
+    begin
+      if keyed?
+        nsupdate('-y', tsig_param, file.path)
+      elsif keyfile?
+        nsupdate('-k', kfile, file.path)
+      else
+        nsupdate(file.path)
+      end
+    rescue Puppet::ExecutionFailure => e
+      warning("Error running nsupdate:" + e.to_s)
+      warning("Input file contents: \n" + contents)
+      raise e
+    end    
     file.unlink
+    
   end
 
-  def accio(file)
+  def accio(contents)
     rrdata_adds.each do |datum|
-      file.write "update add #{name}. #{resource[:ttl]} #{rrclass} #{type} #{maybe_quote(type, datum)}\n"
+      contents << "update add #{name}. #{resource[:ttl]} #{rrclass} #{type} #{maybe_quote(type, datum)}\n"
     end
   end
 
-  def destructo(file)
+  def destructo(contents)
     rrdata_deletes.each do |datum|
-      file.write "update delete #{name}. #{ttl} #{rrclass} #{type} #{maybe_quote(type, datum)}\n"
+      contents << "update delete #{name}. #{ttl} #{rrclass} #{type} #{maybe_quote(type, datum)}\n"
     end
   end
 

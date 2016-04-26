@@ -40,9 +40,6 @@ zone "<%= @_domain %>" {
 <%- if @transfer_source and @transfer_source != ''-%>
 	transfer-source <%= @transfer_source %>;
 <%- end -%>
-<%- if @notify_source and @notify_source != ''-%>
-	notify-source <%= @notify_source %>;
-<%- end -%>
 <%- if @allow_updates and @allow_updates != '' -%>
 	allow-update {
 <%-   Array(@allow_updates).each do |allow_update| -%>
@@ -73,8 +70,5 @@ zone "<%= @_domain %>" {
 		<%= forwarder %><%-if @forwarders_port != 53 -%> port <%= @forwarders_port %><%- end -%>;
 <%-   end -%>
 	};
-<%- else -%>
-    // do normal iterative resolution (do not forward)
-    forwarders { };	
 <%- end -%>
 };

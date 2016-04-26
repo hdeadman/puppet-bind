@@ -34,6 +34,9 @@ view "<%= @name %>" {
 	};
 <%-   end -%>
 <%- end -%>
+<%- if @empty_zones != '' -%>
+	empty-zones-enable <%= @empty_zones ? 'yes' : 'no' %>;
+<%- end -%>
 <%- if @servers and @servers.is_a?(Array) -%>
 <%-   @servers.each do |properties| -%>
 <%-     raise Puppet::Error, 'view servers must have an ip_addr key' unless properties.has_key?('ip_addr') -%>
@@ -43,6 +46,19 @@ view "<%= @name %>" {
 <%-     end -%>
 	};
 <%-   end -%>
+<%- end -%>
+<%- if @also_notify and @also_notify != '' -%>
+	also-notify {
+<%-   Array(@also_notify).each do |server| -%>
+		<%= server %>;
+<%-   end -%>
+	};
+<%- end -%>
+<%- if @notify_source and @notify_source != '' -%>
+	notify-source <%= @notify_source %>;
+<%- end -%>
+<%- if @minimal_responses -%>
+	minimal-responses yes;
 <%- end -%>
 <%- if scope.lookupvar('osfamily') == 'Debian' -%>
 	include "<%= @confdir %>/named.conf.default-zones";

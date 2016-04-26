@@ -9,7 +9,11 @@ define bind::view (
     $recursion_match_clients      = 'any',
     $recursion_match_destinations = '',
     $recursion_match_only         = false,
+    $notify_source                = '',
+    $also_notify                  = [],
+    $empty_zones                  = '',
     $order                        = '10',
+    $minimal_responses            = false,
 ) {
     $confdir = $::bind::confdir
 
